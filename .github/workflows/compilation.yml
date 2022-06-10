@@ -32,13 +32,6 @@ jobs:
         id: slug
         run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
 
-      - name: Upload artifacts
-        if: ${{ success() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: ps2link-${{ steps.slug.outputs.sha8 }}-${{ matrix.version[0] }}
-          path: bin
-
       - name: Extract tag name
         if: startsWith(github.ref, 'refs/tags/')
         id: tag
@@ -51,22 +44,36 @@ jobs:
           mv contrib/PS2LINK.icn ps2link/PS2LINK.icn
           tar -zcvf ps2link-${{ steps.slug.outputs.sha8 }}-${{ matrix.version[0] }}.tar.gz ps2link
 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ps2link-${{ steps.slug.outputs.sha8 }}-${{ matrix.version[0] }}
+          path: ps2link-${{ steps.slug.outputs.sha8 }}-${{ matrix.version[0] }}.tar.gz
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
       - name: Create pre-release
         if: github.ref == 'refs/heads/master'
-        uses: softprops/action-gh-release@master
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-          files: ps2link-${{ steps.slug.outputs.sha8 }}-${{ matrix.version[0] }}.tar.gz
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: true
-          name: "Development build"
-          tag_name: "latest"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          title: Development build
+          files: ps2link-${{ steps.slug.outputs.sha8 }}-*.tar.gz
 
-      - name: Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@master
+      - name: Create Tagged Release Draft
+        if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master'
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-          files: ps2link-${{ steps.slug.outputs.sha8 }}-${{ matrix.version[0] }}.tar.gz
-          tag_name: ${{ steps.tag.outputs.VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: false
+          draft: true
+          automatic_release_tag: RenameMe
+          files: ps2link-${{ steps.slug.outputs.sha8 }}-*.tar.gz
