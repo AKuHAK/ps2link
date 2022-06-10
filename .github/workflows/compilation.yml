@@ -71,7 +71,7 @@ jobs:
           prerelease: true
           automatic_release_tag: latest
           title: Development build
-          files: ps2link/*
+          files: ps2link/**/*.tar.gz
           
       - name: Create Tagged Release Draft
         if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master'
@@ -81,4 +81,4 @@ jobs:
           prerelease: false
           draft: true
           automatic_release_tag: RenameMe
-          files: ps2link-${{ steps.slug.outputs.sha8 }}-*/ps2link-${{ steps.slug.outputs.sha8 }}-*.tar.gz
+          files: ps2link/**/*.tar.gz
