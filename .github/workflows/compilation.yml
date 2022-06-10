@@ -57,6 +57,8 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
+        with:
+          path: ps2link
 
       - name: Get short SHA
         run: ls -R
@@ -69,8 +71,8 @@ jobs:
           prerelease: true
           automatic_release_tag: latest
           title: Development build
-          files: ps2link-${{ steps.slug.outputs.sha8 }}-*/ps2link-${{ steps.slug.outputs.sha8 }}-*.tar.gz
-
+          files: ps2link/*
+          
       - name: Create Tagged Release Draft
         if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master'
         uses: marvinpinto/action-automatic-releases@latest
